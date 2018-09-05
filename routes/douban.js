@@ -24,4 +24,15 @@ router.get('/movie/coming_soon', function(req, res, next) {
 	//res.send("123s");
 });
 
+router.get('/movie/subject', function(req, res, next) {
+	var uri = 'https://api.douban.com/v2/movie/subject/' + req.query.id;
+	request.get(uri, function(err, res_1, body) {
+		if(err) {
+			res.json({"err": err});
+		}
+		res.json(JSON.parse(body));
+	});
+	//res.send("123s");
+});
+
 module.exports = router;
