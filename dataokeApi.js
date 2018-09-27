@@ -110,7 +110,7 @@ var getLastInfo = function() {
 		getTop100()
 		.then(function(data) {
 			var products = [];
-			for(var i = 0; i < Math.min(1, data.result.length); i++) {
+			for(var i = 0; i < Math.min(100, data.result.length); i++) {
 				products.push(data.result[i]);
 			}
 
