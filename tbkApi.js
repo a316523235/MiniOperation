@@ -38,9 +38,12 @@ const client = new ApiClient({
 
 
 var getYsdUrl = function(mallProductID, mmid) {
+  pid = 'mm_119516089_19314614_312936238';
+  var session = '70002101034190379705b87533b0744f93e68ea97edd3e1461b4430b423f5451b005c2c1598668909';
   //return 'http://api.yishoudan.com/newapi/gysq/taobao_user_id/409468254/num_iid/' + mallProductID + '/pid/' + mmid;
   //return 'http://api.yishoudan.com/newapi/gysq/taobao_user_id/1598668909/num_iid/' + mallProductID + '/pid/' + mmid;
-  return 'http://api.yishoudan.com/ysd_api.php?item_id=' + mallProductID + '&adzone_id=312936238&site_id=19314614&session=70002100827678567e01c938939df8b03620cae1064a16666688b931fec47fda987f6221598668909';
+  //return 'http://api.yishoudan.com/ysd_api.php?item_id=' + mallProductID + '&adzone_id=312936238&site_id=19314614&session=70002101150903585ce820156f1ed622f1f749a7cae395ebb98f8c4179993d1d62febfc1598668909';
+  return 'http://gy.yishoudan.com/ysd_api.php?item_id=' + mallProductID + '&pid=' + pid + '&session=' + session;
 }
 
 var getThreeUrl = function(msg) {
@@ -68,7 +71,9 @@ var getThreeUrl = function(msg) {
 var checkAndReturnTaoBaoShare = function(msg) {
 	return new Promise(function(resolve, rej) {
 		try {
-			var isTipContent = (msg.indexOf('手淘') > -1 || msg.indexOf('手机淘宝') > -1) && msg.indexOf('￥') > -1;
+			//msg = msg.replace(new RegExp("《","gm"), '￥');
+			//var isTipContent = msg.indexOf('淘') > -1 &&  (msg.indexOf('￥') > -1 || msg.indexOf('《') > -1 || msg.indexOf('《') > -1  || msg.indexOf('€') > -1);
+			var isTipContent = msg.indexOf('淘') > -1;
 			if(isTipContent) {
 				resolve({"taobaoShareMsg": msg});
 			} else {
@@ -148,7 +153,11 @@ var getProductInfoBySdk = function(mallProductID) {
 			'num_iids': mallProductID
 	    }, function (error,response) {
 	    	if(error) {
-	    		rej("【接口】请求商品信息SDK失败");
+	    		if(error.code == 15 && error.sub_code == '50001') {
+	    			rej("【提示】该商品无优惠信息, 建议人工二次确认, 商品ID: + ' + mallProductID + ', ...... " + JSON.stringify(error, null, 2));
+	    		} else {
+	    			rej("【接口】请求商品信息SDK失败" + mallProductID);
+	    		}
 	    	} else {
 	    		if(response.results.n_tbk_item && response.results.n_tbk_item.length > 0) {
 	    			var item = response.results.n_tbk_item[0];
@@ -224,11 +233,11 @@ var getTklBySdk = function (url, picUrl) {
 var getLastResponMsg = function(data) {
 	try {
 		var lastInfo = { "lastMsg": "", "lastSelfMsg": "" };
-		lastInfo.lastMsg = data.title + "\n--------------------\n";
-		lastInfo.lastSelfMsg = data.title + "\n--------------------\n";
+		lastInfo.lastMsg = data.title + "\n";
+		lastInfo.lastSelfMsg = data.title + "\n";
 
-		lastInfo.lastMsg += "【现售价】 " + data.price + "元\n";
-		lastInfo.lastSelfMsg += "【现售价】 " + data.price + "元\n";
+		lastInfo.lastMsg += "【在售价】 " + data.price + "元\n";
+		lastInfo.lastSelfMsg += "【在售价】 " + data.price + "元\n";
 
 		if(data.quanValue) {
 			var lastPrice = (data.price - data.quanValue).toFixed(2);
@@ -243,15 +252,14 @@ var getLastResponMsg = function(data) {
 
 		//完整提示(仅自己)
 		if(data.quanValue > 0) {
-			//lastInfo.lastSelfMsg += "【券面值】 " + data.quanValue + "元\n";
-			//lastInfo.lastSelfMsg += "【起用价】 " + data.canUsedPrice + "元\n";
-			lastInfo.lastSelfMsg += "【券面值】 满" + data.canUsedPrice + "减" + data.quanValue + "\n";
+			lastInfo.lastSelfMsg += "【券面值】 " + data.quanValue + "元\n";
+			lastInfo.lastSelfMsg += "【起用价】 " + data.canUsedPrice + "元\n";
 		}
-		lastInfo.lastSelfMsg += "【佣金比】 " + data.rate + "%\n";
+		lastInfo.lastSelfMsg += "【佣比例】 " + data.rate + "%\n";
 
 
-		lastInfo.lastMsg += "--------------------\n";
-		lastInfo.lastSelfMsg += "--------------------\n";
+		lastInfo.lastMsg += "------------\n";
+		lastInfo.lastSelfMsg += "------------\n";
 
 		lastInfo.lastMsg += "复制这条信息，" + data.tkl + " 打开【手机淘宝】即可查看";
 		lastInfo.lastSelfMsg += "复制这条信息，" + data.tkl + " 打开【手机淘宝】即可查看";
@@ -330,6 +338,55 @@ var getLastInfo = function(weixinMsg, mmid) {
 	});
 }
 
+var getLastInfoByID = function(mallProductID) {
+	return new Promise(function(resolve, rej) {
+		var yishoudanUrl = "";
+		var picUrl = "";
+		var title = "", price = "", quanValue = "", tkl = "", canUsedPrice = "", rate = "";
+
+		yishoudanUrl = getYsdUrl(mallProductID, '');
+		console.log(yishoudanUrl);
+
+		getProductInfoBySdk(mallProductID)
+		.then(function(data) {
+				//{"title": item.title, "price": item.zk_final_price, "picUrl": item.pict_url}
+				console.log("商品信息" + JSON.stringify(data));
+				console.log("\n");
+				title = data.title;
+				price = data.price;
+				picUrl = data.picUrl;
+				return getCommissionInfoByYsd(yishoudanUrl);
+		})
+		.then(function(data) {
+			//{url: data.url, rate: data.max_commission_rate, canUsedPrice: data.info1, quanValue: data.quan}
+			console.log("佣金信息" + JSON.stringify(data));
+			console.log("\n");
+			quanValue = data.quanValue;
+			canUsedPrice = data.canUsedPrice;
+			var newRate = Math.floor((data.rate.replace("%", "") * 0.5) * 10) / 10;
+		    //rate = data.rate;
+			rate = newRate;
+			return getTklBySdk(data.url, picUrl);
+		})
+		.then(function(data) {
+			//{"tkl": tkl})
+			console.log("淘口令信息：" + JSON.stringify(data));
+			console.log("\n");
+			tkl = data.tkl;
+
+			var lastData = { "title": title, "price": price, "quanValue": quanValue, "tkl": tkl, "rate": rate, "canUsedPrice": canUsedPrice };
+			// var lastInfo = getLastResponMsg(lastData);
+			//{ "lastMsg": "", "lastSelfMsg": "" }
+			//console.log(lastMsg);
+			//console.log("\n");
+			resolve(lastData);
+		})
+		.catch(function(msg) {
+			rej(msg);
+		})
+	});
+}
+
 function test1(weixinMsg, mmid) {
 	getLastInfo(weixinMsg, mmid).then(function(data) {
 		//{"lastMsg": lastMsg}
@@ -341,7 +398,8 @@ function test1(weixinMsg, mmid) {
 }
 
 module.exports = {
-    getLastInfo: getLastInfo
+    getLastInfo: getLastInfo,
+    getLastInfoByID: getLastInfoByID
 };
 
 
