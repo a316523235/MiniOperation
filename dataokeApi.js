@@ -2,7 +2,6 @@ var Promise = require('promise');
 var request = require('request');
 var fs = require('fs');
 var tbkApi = require('./tbkApi.js');
-var all_ok = require('./data/all_ok.json');
 
 /*{
     "data": {
