@@ -49,13 +49,24 @@ function testDingTalk() {
 	dingTalkApi.sendText("测试");
 }
 
-function testDataokeApi() {
-	dataokeApi.getLastInfo().then(function(data) {
+function testDataokeApi_top100() {
+	dataokeApi.getLastInfo_top100(3).then(function(data) {
 		console.log(JSON.stringify(data, null, 2));
 	}).catch(function(msg) {
 		console.log(msg);
 	})
 }
+
+function testDataokeApi_total() {
+	dataokeApi.getLastInfo_total(1).then(function(data) {
+		console.log(JSON.stringify(data, null, 2));
+	}).catch(function(msg) {
+		console.log(msg);
+	})
+}
+
+
+
 
 function testTime(argument) {
 	setTimeout(function() {
@@ -63,10 +74,19 @@ function testTime(argument) {
 	}, 5000)
 }
 
+function  testRequire() {
+	var t = require.resolve('./dataokeApi.js');
+	console.log(t);
+	delete require.cache[t];
+	console.log(require);
+}
+
 //testWeixinApi();
 //testTbkApi();
 // testTbkApi2();
-testDataokeApi();
-//testTime();
+// testDataokeApi_top100();
+testDataokeApi_total();
+// testTime();
 //testDingTalk();
 //testMmApi();
+//testRequire();

@@ -347,16 +347,17 @@ var getLastInfoByID = function(mallProductID) {
 		yishoudanUrl = getYsdUrl(mallProductID, '');
 		console.log(yishoudanUrl);
 
-		getProductInfoBySdk(mallProductID)
-		.then(function(data) {
-				//{"title": item.title, "price": item.zk_final_price, "picUrl": item.pict_url}
-				console.log("商品信息" + JSON.stringify(data));
-				console.log("\n");
-				title = data.title;
-				price = data.price;
-				picUrl = data.picUrl;
-				return getCommissionInfoByYsd(yishoudanUrl);
-		})
+		// getProductInfoBySdk(mallProductID)
+		// .then(function(data) {
+		// 		//{"title": item.title, "price": item.zk_final_price, "picUrl": item.pict_url}
+		// 		console.log("商品信息" + JSON.stringify(data));
+		// 		console.log("\n");
+		// 		title = data.title;
+		// 		price = data.price;
+		// 		picUrl = data.picUrl;
+		// 		return getCommissionInfoByYsd(yishoudanUrl);
+		// })
+		getCommissionInfoByYsd(yishoudanUrl)
 		.then(function(data) {
 			//{url: data.url, rate: data.max_commission_rate, canUsedPrice: data.info1, quanValue: data.quan}
 			console.log("佣金信息" + JSON.stringify(data));

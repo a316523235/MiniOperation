@@ -65,6 +65,63 @@ var getTop100 = function() {
 	});
 }
 
+var getPaoliang100 = function() {
+	return new Promise(function(resolve, rej) {
+		var uri = 'http://api.dataoke.com/index.php?r=Port/index&type=paoliang&appkey=d48df20312&v=2';
+		request.get(uri, function(err, res, body) {
+			if(err) {
+				rej({msg: "获取大淘客paoliang100失败"});
+				return;
+			}
+
+			try{
+				var jsn = JSON.parse(body);
+				fs.writeFileSync('./data/paoliang100.json', JSON.stringify(jsn, null, 2));
+				resolve(jsn);
+			}
+			catch(e) {
+				rej("大淘客paoliang100结果json序列化失败, 原因" + e);
+			}
+			
+		});
+	});
+}
+
+var getTotal = function(endPage) {
+	return new Promise(function(resolve, rej) {
+		var page = 0;
+		var totalResult = { result: [] };
+		var t = setInterval(function() {
+			page++;
+			if(page > endPage) {
+				clearInterval(t);
+				fs.writeFileSync('./data/total.json', JSON.stringify(totalResult, null, 2));
+				resolve(totalResult);
+				return;
+			}
+			console.log("page：" + page);
+
+			var uri = 'http://api.dataoke.com/index.php?r=Port/index&type=total&appkey=d48df20312&v=2&page=' + page;
+			request.get(uri, function(err, res, body) {
+				if(err) {
+					rej({msg: "获取大淘客total失败, page：" + page });
+					return;
+				}
+				try{
+					var jsn = JSON.parse(body);
+					if(totalResult.result && totalResult.result.length == 0) {
+						totalResult = jsn;
+					} else {
+						totalResult.result.push(jsn.result);
+					}
+				}
+				catch(e) {
+				}
+			});
+		}, 5000);
+	});
+}
+
 
 //{okGoods: okGoods, errors: allError}
 var changeTop100 = function(products) {
@@ -85,6 +142,8 @@ var changeTop100 = function(products) {
 				console.log('商品ID: ' + product.GoodsID);
 
 				tbkApi.getLastInfoByID(product.GoodsID).then(function(data) {
+					data.price = product.Org_Price;
+					data.title = product.Title;
 					data.sortTitle = product.D_title;
 					data.pic = product.Pic;
 					data.updateTime_ts = new Date().getTime();
@@ -105,21 +164,25 @@ var changeTop100 = function(products) {
 }
 
 
-var getLastInfo = function() {
+var getLastInfo_top100 = function(cnt) {
 	return new Promise(function(resolve, rej) {
 		getTop100()
 		.then(function(data) {
 			var products = [];
-			for(var i = 0; i < Math.min(100, data.result.length); i++) {
-				products.push(data.result[i]);
-			}
+			realCnt = cnt ? Math.min(cnt, data.result.length) : data.result.length;
+			console.log("realCnt: " + realCnt);
 
-			var okProducts = [];
-			var i = 0;
-			return changeTop100(products, okProducts, i);
+			products = data.result.slice(0, realCnt);
+			return changeTop100(products);
 		})
 		.then(function(data) {
 			fs.writeFileSync('./data/top100_ok.json', JSON.stringify(data, null, 2));
+			try {
+				delete require.cache[require.resolve('./data/top100_ok.json')];
+			} catch(e) {
+				console.log('删除require top100_ok.json失败')
+			}
+
 			resolve(data);
 		})
 		.catch(function(msg) {
@@ -128,7 +191,46 @@ var getLastInfo = function() {
 	});
 }
 
+var getLastInfo_total = function(endPage) {
+	return new Promise(function(resolve, rej) {
+		getTotal(endPage)
+		.then(function(data) {
+			var products = {okGoods:[], errors:[]};
+			if(data.result && data.result.length > 0) {
+				for(var i in data.result) {
+					var p = {
+				      "title": data.result[i].Title,
+				      "price": data.result[i].Org_Price,
+				      "quanValue": data.result[i].Quan_price,
+				      "tkl": "",
+				      "rate": Math.floor((data.result[i].Commission * 0.5) * 10) / 10,
+				      "canUsedPrice": data.result[i].Quan_condition,
+				      "sortTitle": data.result[i].D_title,
+				      "pic": data.result[i].Pic,
+				      "updateTime_ts": new Date().getTime(),
+				      "updateTime": new Date().toLocaleString()
+				    }
+				    products.okGoods.push(p);
+				}
+			}
+
+			console.log("is here");
+			fs.writeFileSync('./data/total_ok.json', JSON.stringify(products, null, 2));
+			try {
+				delete require.cache[require.resolve('./data/total_ok.json')];
+			} catch(e) {
+				console.log('删除require total_ok.json失败')
+			}
+			resolve(products);
+		})
+		.catch(function(msg) {
+			rej(msg);
+		})
+	});
+}
+
 module.exports = {
-    getLastInfo: getLastInfo
+    getLastInfo_top100: getLastInfo_top100,
+    getLastInfo_total: getLastInfo_total
 };
 
