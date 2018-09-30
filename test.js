@@ -2,7 +2,7 @@ var Promise = require('promise');
 var tbkApi = require('./tbkApi.js');
 var mmApi = require('./mmApi.js');
 var dingTalkApi = require('./dingTalkApi.js');
-	var dataokeApi = require('./dataokeApi.js');
+var dataokeApi = require('./dataokeApi.js');
 
 function testTbkApi() {
 	//var weixinMsg = " 【我剁手都要买的宝贝（LED吸顶灯长方形遥控大气客厅灯具现代简约卧室灯阳台灯餐厅灯饰），快来和我一起瓜分红I包】http://www.dwntme.com/h.Z0XJr6x 点击链接，再选择浏览器打开；或复制这条信息￥efM20lqldSe￥后打开👉手淘👈";
@@ -26,9 +26,10 @@ function testTbkApi() {
 
 function testTbkApi2() {
 	var productID = '576041569648';
-	tbkApi.getLastInfoByID(productID).then(function(data) {
+	tbkApi.getLastInfoByID(productID, {"title": 'test', "price": '11', "picUrl": 'http//2', 'sortTitle': 'test sort title', 'introduce': 'test introduce'})
+	.then(function(data) {
 		//{"lastData": lastData}
-		console.log("最终消息：" + JSON.stringify(data.lastData, null, 2));
+		console.log("最终消息：" + JSON.stringify(data, null, 2));
 		console.log("\n");
 	}).catch(function(msg) {
 		console.log(msg);
@@ -81,12 +82,24 @@ function  testRequire() {
 	console.log(require);
 }
 
+function testRedisApi() {
+	var redisApi = require('./redisApi.js');
+	redisApi.test();
+
+	redisApi.defautClient.set("testkey2", "test key is ok");
+	redisApi.defautClient.get('testkey2', function(err, res) {
+		console.log(res);
+	});
+	redisApi.defautClient.quit();
+}
+
 //testWeixinApi();
-//testTbkApi();
-// testTbkApi2();
+// testTbkApi();
+testTbkApi2();
 // testDataokeApi_top100();
-testDataokeApi_total();
+// testDataokeApi_total();
 // testTime();
 //testDingTalk();
 //testMmApi();
 //testRequire();
+//testRedisApi();

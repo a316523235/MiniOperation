@@ -16,6 +16,8 @@ router.get('/build/top100', function(req, res, next) {
 });
 
 
+
+
 router.get('/top100', function(req, res, next) {
 	if(!fs.existsSync('./data/top100_ok.json')) {
 		res.json({msg: '不存在top100_ok.json'});

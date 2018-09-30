@@ -55,6 +55,11 @@ var getTop100 = function() {
 			try{
 				var jsn = JSON.parse(body);
 				fs.writeFileSync('./data/top100.json', JSON.stringify(jsn, null, 2));
+				try {
+					delete require.cache[require.resolve('./data/top100.json')];
+				} catch(e) {
+					console.log('删除require top100.json失败')
+				}
 				resolve(jsn);
 			}
 			catch(e) {
@@ -77,6 +82,11 @@ var getPaoliang100 = function() {
 			try{
 				var jsn = JSON.parse(body);
 				fs.writeFileSync('./data/paoliang100.json', JSON.stringify(jsn, null, 2));
+				try {
+					delete require.cache[require.resolve('./data/paoliang100.json')];
+				} catch(e) {
+					console.log('删除require paoliang100.json失败')
+				}
 				resolve(jsn);
 			}
 			catch(e) {
@@ -96,6 +106,11 @@ var getTotal = function(endPage) {
 			if(page > endPage) {
 				clearInterval(t);
 				fs.writeFileSync('./data/total.json', JSON.stringify(totalResult, null, 2));
+				try {
+					delete require.cache[require.resolve('./data/total.json')];
+				} catch(e) {
+					console.log('删除require total.json失败')
+				}
 				resolve(totalResult);
 				return;
 			}
@@ -123,114 +138,115 @@ var getTotal = function(endPage) {
 }
 
 
-//{okGoods: okGoods, errors: allError}
-var changeTop100 = function(products) {
-	return new Promise(function(resolve, rej) {
-		try {
-			var i = -1;
-			var okGoods = [];
-			var allError = [];
-			var t = setInterval(function() {
-				i++;
-				if(i >= products.length) {
-					clearInterval(t);
-					resolve({okGoods: okGoods, errors: allError});
-					return;
-				}
-				var product = products[i];
+// //{okGoods: okGoods, errors: allError}
+// var changeTop100 = function(products) {
+// 	return new Promise(function(resolve, rej) {
+// 		try {
+// 			var i = -1;
+// 			var okGoods = [];
+// 			var allError = [];
+// 			var t = setInterval(function() {
+// 				i++;
+// 				if(i >= products.length) {
+// 					clearInterval(t);
+// 					resolve({okGoods: okGoods, errors: allError});
+// 					return;
+// 				}
+// 				var product = products[i];
 
-				console.log('商品ID: ' + product.GoodsID);
+// 				console.log('商品ID: ' + product.GoodsID);
 
-				tbkApi.getLastInfoByID(product.GoodsID).then(function(data) {
-					data.price = product.Org_Price;
-					data.title = product.Title;
-					data.sortTitle = product.D_title;
-					data.pic = product.Pic;
-					data.updateTime_ts = new Date().getTime();
-					data.updateTime = new Date().toLocaleString();
-					console.log(data);
-					okGoods.push(data);
-				}).catch(function(msg) {
-					allError.push(msg);
-					console.log('出错:' + msg);
-				});
-			}, 10000)
+// 				tbkApi.getLastInfoByID(product.GoodsID).then(function(data) {
+// 					data.price = product.Org_Price;
+// 					data.title = product.Title;
+// 					data.sortTitle = product.D_title;
+// 					data.pic = product.Pic;
+// 					data.updateTime_ts = new Date().getTime();
+// 					data.updateTime = new Date().toLocaleString();
+// 					console.log(data);
+// 					okGoods.push(data);
+// 				}).catch(function(msg) {
+// 					allError.push(msg);
+// 					console.log('出错:' + msg);
+// 				});
+// 			}, 10000)
 
-		} catch(e) {
-			rej('转链100个失败');
-		}
+// 		} catch(e) {
+// 			rej('转链100个失败');
+// 		}
 		
-	})
-}
+// 	})
+// }
 
 
-var getLastInfo_top100 = function(cnt) {
-	return new Promise(function(resolve, rej) {
-		getTop100()
-		.then(function(data) {
-			var products = [];
-			realCnt = cnt ? Math.min(cnt, data.result.length) : data.result.length;
-			console.log("realCnt: " + realCnt);
+// var getLastInfo_top100 = function(cnt) {
+// 	return new Promise(function(resolve, rej) {
+// 		getTop100()
+// 		.then(function(data) {
+// 			var products = [];
+// 			realCnt = cnt ? Math.min(cnt, data.result.length) : data.result.length;
+// 			console.log("realCnt: " + realCnt);
 
-			products = data.result.slice(0, realCnt);
-			return changeTop100(products);
-		})
-		.then(function(data) {
-			fs.writeFileSync('./data/top100_ok.json', JSON.stringify(data, null, 2));
-			try {
-				delete require.cache[require.resolve('./data/top100_ok.json')];
-			} catch(e) {
-				console.log('删除require top100_ok.json失败')
-			}
+// 			products = data.result.slice(0, realCnt);
+// 			return changeTop100(products);
+// 		})
+// 		.then(function(data) {
+// 			fs.writeFileSync('./data/top100_ok.json', JSON.stringify(data, null, 2));
+// 			try {
+// 				delete require.cache[require.resolve('./data/top100_ok.json')];
+// 			} catch(e) {
+// 				console.log('删除require top100_ok.json失败')
+// 			}
 
-			resolve(data);
-		})
-		.catch(function(msg) {
-			rej(msg);
-		})
-	});
-}
+// 			resolve(data);
+// 		})
+// 		.catch(function(msg) {
+// 			rej(msg);
+// 		})
+// 	});
+// }
 
-var getLastInfo_total = function(endPage) {
-	return new Promise(function(resolve, rej) {
-		getTotal(endPage)
-		.then(function(data) {
-			var products = {okGoods:[], errors:[]};
-			if(data.result && data.result.length > 0) {
-				for(var i in data.result) {
-					var p = {
-				      "title": data.result[i].Title,
-				      "price": data.result[i].Org_Price,
-				      "quanValue": data.result[i].Quan_price,
-				      "tkl": "",
-				      "rate": Math.floor((data.result[i].Commission * 0.5) * 10) / 10,
-				      "canUsedPrice": data.result[i].Quan_condition,
-				      "sortTitle": data.result[i].D_title,
-				      "pic": data.result[i].Pic,
-				      "updateTime_ts": new Date().getTime(),
-				      "updateTime": new Date().toLocaleString()
-				    }
-				    products.okGoods.push(p);
-				}
-			}
+// var getLastInfo_total = function(endPage) {
+// 	return new Promise(function(resolve, rej) {
+// 		getTotal(endPage)
+// 		.then(function(data) {
+// 			var products = {okGoods:[], errors:[]};
+// 			if(data.result && data.result.length > 0) {
+// 				for(var i in data.result) {
+// 					var p = {
+// 				      "title": data.result[i].Title,
+// 				      "price": data.result[i].Org_Price,
+// 				      "quanValue": data.result[i].Quan_price,
+// 				      "tkl": "",
+// 				      "rate": Math.floor((data.result[i].Commission * 0.5) * 10) / 10,
+// 				      "canUsedPrice": data.result[i].Quan_condition,
+// 				      "sortTitle": data.result[i].D_title,
+// 				      "pic": data.result[i].Pic,
+// 				      "updateTime_ts": new Date().getTime(),
+// 				      "updateTime": new Date().toLocaleString()
+// 				    }
+// 				    products.okGoods.push(p);
+// 				}
+// 			}
 
-			console.log("is here");
-			fs.writeFileSync('./data/total_ok.json', JSON.stringify(products, null, 2));
-			try {
-				delete require.cache[require.resolve('./data/total_ok.json')];
-			} catch(e) {
-				console.log('删除require total_ok.json失败')
-			}
-			resolve(products);
-		})
-		.catch(function(msg) {
-			rej(msg);
-		})
-	});
-}
+// 			console.log("is here");
+// 			fs.writeFileSync('./data/total_ok.json', JSON.stringify(products, null, 2));
+// 			try {
+// 				delete require.cache[require.resolve('./data/total_ok.json')];
+// 			} catch(e) {
+// 				console.log('删除require total_ok.json失败')
+// 			}
+// 			resolve(products);
+// 		})
+// 		.catch(function(msg) {
+// 			rej(msg);
+// 		})
+// 	});
+// }
 
 module.exports = {
-    getLastInfo_top100: getLastInfo_top100,
-    getLastInfo_total: getLastInfo_total
+    getTop100: getTop100,
+    getPaoliang100: getPaoliang100,
+    getTotal: getTotal
 };
 

@@ -112,7 +112,7 @@ var getMallProductIDByTkl = function(tklContent) {
 		    'password_content': tklContent
 		}, function(error, response) {
 		    if (error) {
-		    	rej("【接口】请求解析淘口令失败, " + error);
+		    	rej("【接口】请求解析淘口令失败, " + JSON.stringify(error));
 		    } else {
 		    	try {
 	    			if(response && response.url) {
@@ -179,7 +179,7 @@ var getCommissionInfoByYsd = function(yishoudanUrl) {
 			} else {
 				var data = {};
 				try {
-					console.log(body);
+					console.log('come here');
 					data = JSON.parse(body).tbk_privilege_get_response.result.data;
 					//if(data && data.url) {
 					if(data && data.coupon_click_url) {
@@ -338,7 +338,7 @@ var getLastInfo = function(weixinMsg, mmid) {
 	});
 }
 
-var getLastInfoByID = function(mallProductID) {
+var getLastInfoByID = function(mallProductID,  baseInfo) {
 	return new Promise(function(resolve, rej) {
 		var yishoudanUrl = "";
 		var picUrl = "";
@@ -347,17 +347,23 @@ var getLastInfoByID = function(mallProductID) {
 		yishoudanUrl = getYsdUrl(mallProductID, '');
 		console.log(yishoudanUrl);
 
-		// getProductInfoBySdk(mallProductID)
-		// .then(function(data) {
-		// 		//{"title": item.title, "price": item.zk_final_price, "picUrl": item.pict_url}
-		// 		console.log("商品信息" + JSON.stringify(data));
-		// 		console.log("\n");
-		// 		title = data.title;
-		// 		price = data.price;
-		// 		picUrl = data.picUrl;
-		// 		return getCommissionInfoByYsd(yishoudanUrl);
-		// })
-		getCommissionInfoByYsd(yishoudanUrl)
+		var getInfoFnc;
+		if(baseInfo && baseInfo.title && baseInfo.price && baseInfo.picUrl) {
+			getInfoFnc = function(param) { return new Promise(function(resolve, rej) { resolve(baseInfo); }) }
+		} else {
+			getInfoFnc = getProductInfoBySdk;
+		}
+		
+		getInfoFnc(mallProductID)
+		.then(function(data) {
+				//{"title": item.title, "price": item.zk_final_price, "picUrl": item.pict_url}
+				console.log("商品信息" + JSON.stringify(data));
+				console.log("\n");
+				title = data.title;
+				price = data.price;
+				picUrl = data.picUrl;
+				return getCommissionInfoByYsd(yishoudanUrl);
+		})
 		.then(function(data) {
 			//{url: data.url, rate: data.max_commission_rate, canUsedPrice: data.info1, quanValue: data.quan}
 			console.log("佣金信息" + JSON.stringify(data));
@@ -375,11 +381,18 @@ var getLastInfoByID = function(mallProductID) {
 			console.log("\n");
 			tkl = data.tkl;
 
-			var lastData = { "title": title, "price": price, "quanValue": quanValue, "tkl": tkl, "rate": rate, "canUsedPrice": canUsedPrice };
-			// var lastInfo = getLastResponMsg(lastData);
-			//{ "lastMsg": "", "lastSelfMsg": "" }
-			//console.log(lastMsg);
-			//console.log("\n");
+			var lastData = {
+		      "title": title,
+		      "price": price,
+		      "quanValue": quanValue,
+		      "tkl": tkl,
+		      "rate": rate,
+		      "canUsedPrice": canUsedPrice,
+		      "sortTitle": (baseInfo && baseInfo.sortTitle) ? baseInfo.sortTitle : "",
+		      "pic": picUrl,
+		      "introduce": (baseInfo && baseInfo.introduce) ? baseInfo.introduce : ""
+		    };
+
 			resolve(lastData);
 		})
 		.catch(function(msg) {
@@ -400,7 +413,10 @@ function test1(weixinMsg, mmid) {
 
 module.exports = {
     getLastInfo: getLastInfo,
-    getLastInfoByID: getLastInfoByID
+    getLastInfoByID: getLastInfoByID,
+    checkAndReturnTaoBaoShare: checkAndReturnTaoBaoShare,
+    getMallProductIDByTkl: getMallProductIDByTkl
+
 };
 
 
