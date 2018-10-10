@@ -19,13 +19,13 @@ router.get('/build/top100', function(req, res, next) {
 
 
 router.get('/top100', function(req, res, next) {
-	if(!fs.existsSync('./data/top100_ok.json')) {
-		res.json({msg: '不存在top100_ok.json'});
+	if(!fs.existsSync('./data/top100.json')) {
+		res.json({msg: '不存在top100.json'});
 		return;
 	}
 
-	var top100_ok = require('./../data/top100_ok.json');
-	var okGoods = top100_ok.okGoods;
+	var top100 = require('./../data/top100.json');
+	var okGoods = top100.result;
 	if(req.query.start && req.query.count) {
 		var datas = [];
 		if(req.query.start >= okGoods.length) {
@@ -50,13 +50,13 @@ router.get('/top100', function(req, res, next) {
 });
 
 router.get('/all', function(req, res, next) {
-	if(!fs.existsSync('./data/total_ok.json')) {
-		res.json({msg: '不存在total_ok.json'});
+	if(!fs.existsSync('./data/total.json')) {
+		res.json({msg: '不存在total.json'});
 		return;
 	}
 
-	var total_ok = require('./../data/total_ok.json');
-	var okGoods = total_ok.okGoods;
+	var total = require('./../data/total.json');
+	var okGoods = total.result;
 	if(req.query.start && req.query.count) {
 		var datas = [];
 		if(req.query.start >= okGoods.length) {

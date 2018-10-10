@@ -51,7 +51,12 @@ function testDingTalk() {
 }
 
 function testDataokeApi_top100() {
-	dataokeApi.getLastInfo_top100(3).then(function(data) {
+	// dataokeApi.getLastInfo_top100(3).then(function(data) {
+	// 	console.log(JSON.stringify(data, null, 2));
+	// }).catch(function(msg) {
+	// 	console.log(msg);
+	// })
+	dataokeApi.getTop100().then(function(data) {
 		console.log(JSON.stringify(data, null, 2));
 	}).catch(function(msg) {
 		console.log(msg);
@@ -59,8 +64,13 @@ function testDataokeApi_top100() {
 }
 
 function testDataokeApi_total() {
-	dataokeApi.getLastInfo_total(1).then(function(data) {
-		console.log(JSON.stringify(data, null, 2));
+	// dataokeApi.getLastInfo_total(1).then(function(data) {
+	// 	console.log(JSON.stringify(data, null, 2));
+	// }).catch(function(msg) {
+	// 	console.log(msg);
+	// })
+	dataokeApi.getTotal(2).then(function(data) {
+		console.log({msg: "isok"});
 	}).catch(function(msg) {
 		console.log(msg);
 	})
@@ -95,9 +105,9 @@ function testRedisApi() {
 
 //testWeixinApi();
 // testTbkApi();
-testTbkApi2();
+// testTbkApi2();
 // testDataokeApi_top100();
-// testDataokeApi_total();
+testDataokeApi_total();
 // testTime();
 //testDingTalk();
 //testMmApi();
