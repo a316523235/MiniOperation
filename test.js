@@ -25,7 +25,7 @@ function testTbkApi() {
 }
 
 function testTbkApi2() {
-	var productID = '576041569648';
+	var productID = '571627326934';
 	tbkApi.getLastInfoByID(productID, {"title": 'test', "price": '11', "picUrl": 'http//2', 'sortTitle': 'test sort title', 'introduce': 'test introduce'})
 	.then(function(data) {
 		//{"lastData": lastData}
@@ -105,9 +105,9 @@ function testRedisApi() {
 
 //testWeixinApi();
 // testTbkApi();
-// testTbkApi2();
+testTbkApi2();
 // testDataokeApi_top100();
-testDataokeApi_total();
+// testDataokeApi_total();
 // testTime();
 //testDingTalk();
 //testMmApi();
