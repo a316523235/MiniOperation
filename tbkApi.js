@@ -370,7 +370,7 @@ var getLastInfoByID = function(mallProductID,  baseInfo) {
 			console.log("\n");
 			quanValue = data.quanValue;
 			canUsedPrice = data.canUsedPrice;
-			var newRate = Math.floor((data.rate.replace("%", "") * 0.5) * 10) / 10;
+			var newRate = Math.floor((data.rate.replace("%", "") * 0.7) * 10) / 10;
 		    //rate = data.rate;
 			rate = newRate;
 			return getTklBySdk(data.url, picUrl);
