@@ -7,12 +7,21 @@ var dataokeApi = require('./../dataokeApi.js');
 
 
 router.get('/build/top100', function(req, res, next) {
-	dataokeApi.getLastInfo_top100(req.query.count).then(function(data) {
+	dataokeApi.getTop100().then(function(data) {
 		console.log(JSON.stringify(data, null, 2));
 	}).catch(function(msg) {
 		console.log(msg);
 	})
 	res.json({msg: '开始生成top100数据'});
+});
+
+router.get('/build/total', function(req, res, next) {
+	dataokeApi.getTotal(req.query.page).then(function(data) {
+		console.log(JSON.stringify(data, null, 2));
+	}).catch(function(msg) {
+		console.log(msg);
+	})
+	res.json({msg: '开始生成total数据'});
 });
 
 
