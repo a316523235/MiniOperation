@@ -15,13 +15,30 @@ router.get('/build/top100', function(req, res, next) {
 	res.json({msg: '开始生成top100数据'});
 });
 
-router.get('/build/total', function(req, res, next) {
+router.get('/build/all', function(req, res, next) {
 	dataokeApi.getTotal(req.query.page).then(function(data) {
 		console.log(JSON.stringify(data, null, 2));
 	}).catch(function(msg) {
 		console.log(msg);
 	})
 	res.json({msg: '开始生成total数据'});
+});
+
+router.get('/build', function(req, res, next) {
+	if(!req.query.page) {
+		req.query.page = 5;
+	}
+
+	dataokeApi.getTop100().then(function(data) {
+		console.log(JSON.stringify(data, null, 2));
+		return dataokeApi.getTotal(req.query.page);
+	}).then(function(data) {
+		console.log(JSON.stringify(data, null, 2));
+	}).catch(function(msg) {
+		console.log(msg);
+	})
+	res.json({msg: '开始生成数据'});
+
 });
 
 
@@ -35,6 +52,15 @@ router.get('/top100', function(req, res, next) {
 
 	var top100 = require('./../data/top100.json');
 	var okGoods = top100.result;
+
+	if(!req.query.start) {
+		req.query.start = 0;
+	}
+	if(!req.query.count) {
+		req.query.count = 10;
+	}
+
+
 	if(req.query.start && req.query.count) {
 		var datas = [];
 		if(req.query.start >= okGoods.length) {
@@ -66,6 +92,14 @@ router.get('/all', function(req, res, next) {
 
 	var total = require('./../data/total.json');
 	var okGoods = total.result;
+
+	if(!req.query.start) {
+		req.query.start = 0;
+	}
+	if(!req.query.count) {
+		req.query.count = 10;
+	}
+
 	if(req.query.start && req.query.count) {
 		var datas = [];
 		if(req.query.start >= okGoods.length) {
