@@ -20,7 +20,7 @@ var test = function() {
 var setProduct = function(id, product) {
 	var key = 'miniOperation:product:changed:' + id;
 	var value = JSON.stringify(product);
-	client.set(key, value, 'EX', 60 * 60 * 24);
+	client.set(key, value, 'EX', 60 * 60 * 1);
 }
 
 var getProduct = function(id) {
