@@ -97,4 +97,8 @@ router.get('/info', function(req, res, nex) {
   }
 });
 
+router.get('/protocol', function(req, res, nex) {
+  res.json({status: true, content: req.protocol, msg: '协议'})
+});
+
 module.exports = router;
